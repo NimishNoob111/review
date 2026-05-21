@@ -279,18 +279,22 @@
     </main>
 
     <script>
+        // --- CONFIGURATION: PASTE YOUR SUPABASE CREDS HERE ---
+        const SUPABASE_URL = "https://kczfvomzywmloaxrrpla.supabase.co/rest/v1/";
+        const SUPABASE_KEY = "sb_publishable_CatMimzYfv9s9zQIoG_paA_WglF_5Nz";
+
         let reviewsData = [];
-        // Keep track of what elements the current browser liked in local tracker metrics arrays
         let likedTracks = JSON.parse(localStorage.getItem('nodes_liked_tracker')) || [];
 
-        // Dynamic API loader wrapper connection
         async function fetchReviewsFromServer() {
             try {
-                const response = await fetch('process_reviews.php');
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/reviews?select=*&order=id.desc`, {
+                    headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` }
+                });
                 reviewsData = await response.json();
                 renderReviews();
             } catch (err) {
-                console.error("Failed syncing data packages from network node backend: ", err);
+                console.error("Failed syncing data packages from Supabase: ", err);
             }
         }
 
@@ -302,7 +306,8 @@
                 const hasLiked = likedTracks.includes(review.id);
                 let commentsHTML = "";
                 
-                review.comments.forEach(c => {
+                const commentsList = typeof review.comments === 'string' ? JSON.parse(review.comments) : review.comments;
+                commentsList.forEach(c => {
                     commentsHTML += `
                         <div class="comment-box">
                             <div class="comment-author">@${c.author}</div>
@@ -311,8 +316,14 @@
                     `;
                 });
 
-                if(review.comments.length === 0) {
+                if(commentsList.length === 0) {
                     commentsHTML = `<p style="font-size: 13px; color: var(--text-muted); font-style: italic; margin-bottom: 10px;">No responses posted yet. Be the first to reply!</p>`;
+                }
+
+                let dateStr = "Just now";
+                if(review.created_at) {
+                    const d = new Date(review.created_at);
+                    dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                 }
 
                 const card = document.createElement('div');
@@ -321,7 +332,7 @@
                     <div class="review-header">
                         <div class="user-meta">
                             <h4>${review.username}</h4>
-                            <span>${review.time}</span>
+                            <span>${dateStr}</span>
                         </div>
                         <div class="star-badge">★ ${review.rating}.0</div>
                     </div>
@@ -329,11 +340,11 @@
                     <p class="review-text">${review.body}</p>
                     
                     <div class="actions-row">
-                        <button class="action-btn ${hasLiked ? 'liked' : ''}" onclick="toggleLike('${review.id}')">
+                        <button class="action-btn ${hasLiked ? 'liked' : ''}" onclick="toggleLike(${review.id})">
                             👍 Like (${review.likes})
                         </button>
-                        <button class="action-btn" onclick="toggleRepliesDisplay('${review.id}')">
-                            💬 Comments (${review.comments.length})
+                        <button class="action-btn" onclick="toggleRepliesDisplay(${review.id})">
+                            💬 Comments (${commentsList.length})
                         </button>
                     </div>
 
@@ -343,7 +354,7 @@
                         </div>
                         <div class="input-reply-container">
                             <input type="text" id="reply-input-${review.id}" placeholder="Type your reply response here...">
-                            <button class="btn-post-reply" onclick="submitReply('${review.id}')">Reply</button>
+                            <button class="btn-post-reply" onclick="submitReply(${review.id})">Reply</button>
                         </div>
                     </div>
                 `;
@@ -358,24 +369,26 @@
             const ratingInput = document.querySelector('input[name="rating"]:checked');
             
             const payload = {
-                action: 'new_review',
                 username: document.getElementById('formUsername').value.trim(),
                 title: document.getElementById('formTitle').value.trim(),
                 body: document.getElementById('formBody').value.trim(),
-                rating: ratingInput.value
+                rating: parseInt(ratingInput.value)
             };
 
-            const res = await fetch('process_reviews.php', {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    "apikey": SUPABASE_KEY, 
+                    "Authorization": `Bearer ${SUPABASE_KEY}`,
+                    "Prefer": "return=representation"
+                },
                 body: JSON.stringify(payload)
             });
             
-            const result = await res.json();
-            if(result.status === 'success') {
-                reviewsData = result.data;
+            if(res.ok) {
                 e.target.reset();
-                renderReviews();
+                fetchReviewsFromServer();
             }
         }
 
@@ -384,55 +397,57 @@
             const textValue = replyInput.value.trim();
             if(!textValue) return;
 
-            const payload = {
-                action: 'add_reply',
-                id: reviewId,
-                author: 'Client',
-                text: textValue
-            };
+            const targetReview = reviewsData.find(r => r.id === reviewId);
+            if(!targetReview) return;
 
-            const res = await fetch('process_reviews.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+            const commentsList = typeof targetReview.comments === 'string' ? JSON.parse(targetReview.comments) : targetReview.comments;
+            commentsList.push({ author: 'Client', text: textValue });
+
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?id=eq.${reviewId}`, {
+                method: 'PATCH',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    "apikey": SUPABASE_KEY, 
+                    "Authorization": `Bearer ${SUPABASE_KEY}`
+                },
+                body: JSON.stringify({ comments: commentsList })
             });
 
-            const result = await res.json();
-            if(result.status === 'success') {
-                reviewsData = result.data;
-                renderReviews();
-                document.getElementById(`replies-panel-${reviewId}`).classList.add('show');
+            if(res.ok) {
+                fetchReviewsFromServer();
+                setTimeout(() => {
+                    document.getElementById(`replies-panel-${reviewId}`).classList.add('show');
+                }, 400);
             }
         }
 
         async function toggleLike(reviewId) {
             const index = likedTracks.indexOf(reviewId);
-            let increment = true;
+            const targetReview = reviewsData.find(r => r.id === reviewId);
+            if(!targetReview) return;
 
+            let currentLikes = targetReview.likes || 0;
             if (index > -1) {
                 likedTracks.splice(index, 1);
-                increment = false;
+                currentLikes = Math.max(0, currentLikes - 1);
             } else {
                 likedTracks.push(reviewId);
+                currentLikes += 1;
             }
             localStorage.setItem('nodes_liked_tracker', JSON.stringify(likedTracks));
 
-            const payload = {
-                action: 'toggle_like',
-                id: reviewId,
-                increment: increment
-            };
-
-            const res = await fetch('process_reviews.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?id=eq.${reviewId}`, {
+                method: 'PATCH',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    "apikey": SUPABASE_KEY, 
+                    "Authorization": `Bearer ${SUPABASE_KEY}`
+                },
+                body: JSON.stringify({ likes: currentLikes })
             });
 
-            const result = await res.json();
-            if(result.status === 'success') {
-                reviewsData = result.data;
-                renderReviews();
+            if(res.ok) {
+                fetchReviewsFromServer();
             }
         }
 
@@ -452,7 +467,6 @@
             document.getElementById('totalReviewsCount').innerText = `${reviewsData.length} Reviews`;
         }
 
-        // Initialize and fetch real-time global server stats data on load
         fetchReviewsFromServer();
     </script>
 </body>
