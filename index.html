@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GhostNodes - Client Reviews & Feedback</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #020617;
+            --card-bg: rgba(15, 23, 42, 0.65); 
+            --primary-blue: #2563eb;
+            --primary-hover: #1d4ed8;
+            --accent-cyan: #06b6d4;
+            --star-gold: #f59e0b;
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --border-color: rgba(51, 65, 85, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.5;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* --- PREMIUM BACKGROUND LAYER --- */
+        .bg-animation-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            background-image: url('https://cdn.magicdecor.in/com/2023/02/29184224/image-1689504354-3016.jpg'); 
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-color: rgba(2, 6, 23, 0.75); 
+            background-blend-mode: multiply; 
+        }
+
+        /* --- Header Section --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 8%;
+            position: relative;
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            text-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+        }
+
+        .logo span {
+            color: var(--primary-blue);
+        }
+
+        .back-btn {
+            background: rgba(17, 24, 39, 0.4);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            backdrop-filter: blur(8px);
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .back-btn:hover {
+            background: rgba(31, 41, 55, 0.6);
+            transform: translateY(-2px);
+        }
+
+        /* --- Primary Layout --- */
+        .content-wrapper {
+            max-width: 900px;
+            margin: 40px auto 100px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        /* --- Summary Header Banner --- */
+        .summary-banner {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .summary-left h1 {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+
+        .summary-left p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .summary-stats {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .rating-huge-box {
+            text-align: center;
+        }
+
+        .huge-rating {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            line-height: 1;
+            text-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+        }
+
+        .huge-stars {
+            color: var(--star-gold);
+            font-size: 16px;
+            margin-top: 4px;
+        }
+
+        .total-count-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        /* --- Cards Panels --- */
+        .form-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 28px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .card-h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary-blue);
+            padding-left: 10px;
+        }
+
+        /* --- Interactive Rating Picker --- */
+        .rating-picker {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+
+        .rating-picker input {
+            display: none;
+        }
+
+        .rating-picker label {
+            font-size: 32px;
+            color: #1e293b;
+            cursor: pointer;
+            transition: color 0.2s, transform 0.1s;
+        }
+
+        .rating-picker label:active {
+            transform: scale(0.9);
+        }
+
+        .rating-picker label:hover,
+        .rating-picker label:hover ~ label,
+        .rating-picker input:checked ~ label {
+            color: var(--star-gold);
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+        }
+
+        /* --- Inputs Styling --- */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+            .summary-banner { flex-direction: column; text-align: center; }
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            border-color: var(--primary-blue);
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        .btn-submit {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-submit:hover {
+            background: var(--primary-hover);
+        }
+
+        /* --- Live Feed Cards --- */
+        .feed-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .review-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: border-color 0.3s;
+        }
+
+        .review-card:hover {
+            border-color: rgba(37, 99, 235, 0.3);
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .user-meta h4 {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .user-meta span {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .star-badge {
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .review-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #f1f5f9;
+        }
+
+        .review-text {
+            color: #cbd5e1;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        /* --- Action Rows --- */
+        .actions-row {
+            display: flex;
+            gap: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 14px;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+
+        .action-btn:hover {
+            color: white;
+        }
+
+        .action-btn.liked {
+            color: #3b82f6 !important;
+            font-weight: 700;
+        }
+
+        /* --- Dropdown Replies Panel --- */
+        .replies-panel {
+            display: none;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .replies-panel.show {
+            display: block;
+        }
+
+        .comment-box {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid #475569;
+        }
+
+        .comment-author {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            margin-bottom: 2px;
+        }
+
+        .comment-body {
+            font-size: 13px;
+            color: #e2e8f0;
+        }
+
+        .input-reply-container {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .input-reply-container input {
+            flex: 1;
+            background: #090f1e;
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .input-reply-container input:focus {
+            border-color: var(--primary-blue);
+        }
+
+        .btn-post-reply {
+            background: #1e293b;
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 0 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-post-reply:hover {
+            background: #334155;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-animation-layer"></div>
+
+    <header>
+        <a href="https://home.ghostsmc.in/" class="logo">☁️ Ghost<span>Nodes</span></a>
+        <a href="https://home.ghostsmc.in/" class="back-btn">← Back to Site</a>
+    </header>
+
+    <main class="content-wrapper">
+
+        <section class="summary-banner">
+            <div class="summary-left">
+                <h1>Client Feedback Center</h1>
+                <p>Real-time client reviews and infrastructure performance assessment statements.</p>
+            </div>
+            <div class="summary-stats">
+                <div class="rating-huge-box">
+                    <div class="huge-rating" id="avgRatingValue">4.7</div>
+                    <div class="huge-stars">★★★★★</div>
+                    <div class="total-count-label" id="totalReviewsCount">2 Reviews</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="form-card">
+            <h2 class="card-h2">Submit a Review</h2>
+            <form id="reviewForm" onsubmit="handleReviewSubmit(event)">
+                
+                <div class="form-group">
+                    <label>Select Your Rating</label>
+                    <div class="rating-picker">
+                        <input type="radio" id="star5" name="rating" value="5" required><label for="star5">★</label>
+                        <input type="radio" id="star4" name="rating" value="4"><label for="star4">★</label>
+                        <input type="radio" id="star3" name="rating" value="3"><label for="star3">★</label>
+                        <input type="radio" id="star2" name="rating" value="2"><label for="star2">★</label>
+                        <input type="radio" id="star1" name="rating" value="1"><label for="star1">★</label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Your Username</label>
+                        <input type="text" id="formUsername" placeholder="e.g., Miner_Pro" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Review Summary / Headline</label>
+                        <input type="text" id="formTitle" placeholder="e.g., Insane node performance!" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Detailed Opinion / Feedback</label>
+                    <textarea id="formBody" rows="4" placeholder="Describe your experience with GhostNodes speeds, uptime, panel accessibility..." required></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit">Publish Review</button>
+            </form>
+        </section>
+
+        <h3 style="font-size: 18px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">Recent Submissions</h3>
+        <section class="feed-container" id="reviewsFeed"></section>
+
+    </main>
+
+    <script>
+        // Array holding the active reviews data dynamically
+        let reviewsData = [
+            {
+                id: 1,
+                username: "Alex_D",
+                time: "2 hours ago",
+                rating: 5,
+                title: "Exceptional Build Quality!",
+                body: "The panel UI is incredibly crisp and loading parameters are flawless. Exceeded expectations from day one. Highly recommend this layout for high-performance network hosting scaling.",
+                likes: 12,
+                hasLiked: false,
+                comments: [
+                    { author: "Moderator_Jason", text: "Agreed! The Indian Node deployment runs ultra low latencies." },
+                    { author: "TechDev_99", text: "Completely stabilized my heavy custom Skript packages." }
+                ]
+            },
+            {
+                id: 2,
+                username: "Sarah_K",
+                time: "Yesterday",
+                rating: 4,
+                title: "Incredible Uptime on Indian Node",
+                body: "Uptime bar graphic checks out, server node has been pinned at 100% since deployment setup. Pterodactyl panels respond lightning fast.",
+                likes: 4,
+                hasLiked: false,
+                comments: []
+            }
+        ];
+
+        // Renders review items to the feed UI
+        function renderReviews() {
+            const feed = document.getElementById('reviewsFeed');
+            feed.innerHTML = "";
+
+            reviewsData.forEach(review => {
+                let commentsHTML = "";
+                review.comments.forEach(c => {
+                    commentsHTML += `
+                        <div class="comment-box">
+                            <div class="comment-author">@${c.author}</div>
+                            <div class="comment-body">${c.text}</div>
+                        </div>
+                    `;
+                });
+
+                if(review.comments.length === 0) {
+                    commentsHTML = `<p style="font-size: 13px; color: var(--text-muted); font-style: italic; margin-bottom: 10px;" id="no-comm-${review.id}">No responses posted yet. Be the first to reply!</p>`;
+                }
+
+                const card = document.createElement('div');
+                card.className = "review-card";
+                card.innerHTML = `
+                    <div class="review-header">
+                        <div class="user-meta">
+                            <h4>${review.username}</h4>
+                            <span>${review.time}</span>
+                        </div>
+                        <div class="star-badge">★ ${review.rating}.0</div>
+                    </div>
+                    <div class="review-title">${review.title}</div>
+                    <p class="review-text">${review.body}</p>
+                    
+                    <div class="actions-row">
+                        <button class="action-btn ${review.hasLiked ? 'liked' : ''}" onclick="toggleLike(${review.id})">
+                            👍 Like (${review.likes})
+                        </button>
+                        <button class="action-btn" onclick="toggleRepliesDisplay(${review.id})">
+                            💬 Comments (${review.comments.length})
+                        </button>
+                    </div>
+
+                    <div class="replies-panel" id="replies-panel-${review.id}">
+                        <div id="comments-container-${review.id}">
+                            ${commentsHTML}
+                        </div>
+                        <div class="input-reply-container">
+                            <input type="text" id="reply-input-${review.id}" placeholder="Type your reply response here...">
+                            <button class="btn-post-reply" onclick="submitReply(${review.id})">Reply</button>
+                        </div>
+                    </div>
+                `;
+                feed.appendChild(card);
+            });
+
+            recalculateGlobalRatings();
+        }
+
+        // Form Submit handler
+        function handleReviewSubmit(e) {
+            e.preventDefault();
+
+            const ratingInput = document.querySelector('input[name="rating"]:checked');
+            const usernameInput = document.getElementById('formUsername');
+            const titleInput = document.getElementById('formTitle');
+            const bodyInput = document.getElementById('formBody');
+
+            const newReview = {
+                id: Date.now(),
+                username: usernameInput.value.trim(),
+                time: "Just now",
+                rating: parseInt(ratingInput.value),
+                title: titleInput.value.trim(),
+                body: bodyInput.value.trim(),
+                likes: 0,
+                hasLiked: false,
+                comments: []
+            };
+
+            reviewsData.unshift(newReview);
+            e.target.reset();
+            renderReviews();
+        }
+
+        // Comments submission handler
+        function submitReply(reviewId) {
+            const replyInput = document.getElementById(`reply-input-${reviewId}`);
+            const textValue = replyInput.value.trim();
+
+            if(!textValue) return;
+
+            const targetReview = reviewsData.find(r => r.id === reviewId);
+            if(targetReview) {
+                targetReview.comments.push({
+                    author: "You",
+                    text: textValue
+                });
+                
+                replyInput.value = "";
+                renderReviews();
+                document.getElementById(`replies-panel-${reviewId}`).classList.add('show');
+            }
+        }
+
+        // Like button toggle automation
+        function toggleLike(reviewId) {
+            const targetReview = reviewsData.find(r => r.id === reviewId);
+            if(targetReview) {
+                if(targetReview.hasLiked) {
+                    targetReview.likes--;
+                    targetReview.hasLiked = false;
+                } else {
+                    targetReview.likes++;
+                    targetReview.hasLiked = true;
+                }
+                renderReviews();
+            }
+        }
+
+        // Toggle replies panel visibility
+        function toggleRepliesDisplay(reviewId) {
+            const targetBox = document.getElementById(`replies-panel-${reviewId}`);
+            targetBox.classList.toggle('show');
+        }
+
+        // Recalculates average star math globally
+        function recalculateGlobalRatings() {
+            if(reviewsData.length === 0) {
+                document.getElementById('avgRatingValue').innerText = "0.0";
+                document.getElementById('totalReviewsCount').innerText = "0 Reviews";
+                return;
+            }
+
+            let sum = 0;
+            reviewsData.forEach(r => sum += r.rating);
+            const average = (sum / reviewsData.length).toFixed(1);
+
+            document.getElementById('avgRatingValue').innerText = average;
+            document.getElementById('totalReviewsCount').innerText = `${reviewsData.length} ${reviewsData.length === 1 ? 'Review' : 'Reviews'}`;
+        }
+
+        // Run on start
+        renderReviews();
+    </script>
+</body>
+</html>
