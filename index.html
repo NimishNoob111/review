@@ -280,7 +280,7 @@
 
     <script>
         // --- CONFIGURATION: PASTE YOUR SUPABASE CREDS HERE ---
-        const SUPABASE_URL =https://kczfvomzywmloaxrrpla.supabase.co/rest/v1/;
+        const SUPABASE_URL =https://kczfvomzywmloaxrrpla.supabase.co;
         const SUPABASE_KEY =sb_publishable_CatMimzYfv9s9zQIoG_paA_WglF_5Nz;
 
         let reviewsData = [];
@@ -375,7 +375,7 @@
                 rating: parseInt(ratingInput.value)
             };
 
-            const res = await fetch(`${https://kczfvomzywmloaxrrpla.supabase.co/rest/v1/}/rest/v1/reviews`, {
+            const res = await fetch(`${https://kczfvomzywmloaxrrpla.supabase.co}/rest/v1/reviews`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
